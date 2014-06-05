@@ -1,0 +1,14 @@
+{
+  "name": "stream-server",
+  "description": "Async server for processing camera feeds.",
+  "version": "0.0.1",
+  "private": true,
+  "author": "Richard <r.avengraus@gmail.com>",
+  "main": "server.js",
+  "dependencies": {
+	"restler": "*",
+	"restify": "*",
+	"winston": "*",
+	"xml2js": "*"
+  }
+}
