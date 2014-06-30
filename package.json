@@ -6,9 +6,10 @@
   "author": "Richard <r.avengraus@gmail.com>",
   "main": "server.js",
   "dependencies": {
-	"restler": "*",
-	"restify": "*",
-	"winston": "*",
-	"xml2js": "*"
+    "nedb": "^0.10.5",
+    "restify": "*",
+    "restler": "*",
+    "winston": "*",
+    "xml2js": "*"
   }
 }
