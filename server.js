@@ -25,7 +25,8 @@ system.log = function (level, message, print) {
 };
 
 // load trains from config
-var trains = config.trains;
+var trains = config.trains,
+    trainsJson = JSON.stringify(trains);
 
 function startup() {
 	for (var i = 0; i < trains.length; i++) {
@@ -68,10 +69,20 @@ server.get('/train/:action/:id', function(req, res, next) {
 	next();
 });
 
+// route for train configuration
+server.get('/data/config/train', function (req, res, next) {
+	var data = { };
+	data.trains = JSON.parse(trainsJson)
+	
+	res.send(data);
+	next();
+});
+
 // route for system data
 server.get('/data/system', function (req, res, next) {
 	system.find({}).sort({ timestamp: -1 }).limit(100).exec(function (err, dataset) {
 	  if (err) {
+		  system.log('error', 'Error retrieving system messages from database.');
 		  res.send('Error.');
 	  }
 	  else {
@@ -81,20 +92,51 @@ server.get('/data/system', function (req, res, next) {
 	});
 });
 
+// route for camera data
 server.get('/data/camera/:name', function (req, res, next) {	
 	if (req.params.name) {
+		var notFound = true;
+		
+		// search trains for camera
 		for (var i = 0; i < trains.length; i++) {
 			var cameras = trains[i].cameras;
 		
 			for (var j = 0; j < cameras.length; j++) {
-				if (cameras[j].camera) {
+				// camera matching name found
+				if (cameras[j].camera.name == req.params.name) {
+					notFound = false;
 					
+					// call camera for log dump
+					cameras[j].camera.data(function (err, dataset) {
+						if (err) {
+							system.log('error', 'Failed to get event log for camera ' + camera.name + '.');
+							res.send('Error.');
+						}
+						else {
+							res.send(dataset);
+						}
+						next();
+					});
+					break;
 				}
 			}
-		}		
+		}
+		
+		if (notFound) {
+			res.send('Camera not found.');
+			next();
+		}
 	}
-	next();
+	else {
+		res.send('Error.');
+		next();
+	}
 });
+
+server.get(/\/admin\/?.*/, restify.serveStatic({
+  directory: './public',
+  default: 'index.html'
+}));
 
 function fileSaved(camera, files, index) {
 	var filename = files[index].name[0],

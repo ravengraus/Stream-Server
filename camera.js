@@ -60,11 +60,19 @@ Camera.prototype.log = function (level, message, callback) {
 	});
 };
 
-// log message
-Camera.prototype.log = function (callback) {
+// get data
+Camera.prototype.data = function (callback) {
 	var camera = this;
 
-	camera.db.
+	camera.db.find({}).sort({ timestamp: -1 }).limit(100).exec(function (err, dataset) {
+	  if (err) {
+		  camera.log('error', 'Error retrieving log messages from database for camera.');
+		  if (callback) callback(true);
+	  }
+	  else {
+		  if (callback) callback(false, dataset);
+	  }
+	});
 };
 
 // recording status

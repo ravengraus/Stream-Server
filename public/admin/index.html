@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>System Status</title>
+	<link rel="stylesheet" href="css/bootstrap.min.css" />
+	<link rel="stylesheet" href="css/bootstrap-theme.min.css" />
+</head>
+<body>
+	<div class="header">
+		<ol class="breadcrumb">
+		  <li class="active">System Status</li>
+		</ol>
+	</div>
+	<div class="container">
+		<div id="train-list-placeholder"></div>
+		<hr />
+		<div id="log-table-placeholder"></div>
+	</div>
+	<script id="train-map" type="text/x-handlebars-template">
+		{{#each trains}}
+			<h4>{{id}}</h4>
+			{{#if cameras}}
+			<div>
+				<ul class="nav nav-pills">
+					{{#each cameras}}
+					<li><a href="#">{{name}}</a></li>
+					{{/each}}
+				</ul>
+			</div>
+			{{else}}
+			<p>No cameras configured.</p>
+			{{/if}}
+		{{/each}}
+	</script>
+	<script id="data-table" type="text/x-handlebars-template">
+		<table class="table table-striped">
+			<thead>
+				<tr>
+					<th>Level</th>
+					<th>Message</th>
+					<th>Date/Time</th>
+				</tr>
+			</thead>
+			<tbody>
+			{{#each this}}
+			 	<tr>
+				 	<td>{{title_case level}}</td>
+				 	<td>{{message}}</td>
+				 	<td>{{format_date timestamp}}</td>
+				</tr>
+			{{/each}}
+			</tbody>
+		</table>
+	</script>
+	<script type="text/javascript" src="js/handlebars-v1.3.0.js"></script>
+	<script type="text/javascript" src="js/jquery-1.11.1.min.js"></script>
+	<script type="text/javascript" src="js/bootstrap.min.js"></script>
+	<script>
+		Handlebars.registerHelper('title_case', function() {
+			var s = this.level.substring(0, 1).toUpperCase();
+			s = s + this.level.substring(1);
+			return new Handlebars.SafeString(s);
+		});
+		Handlebars.registerHelper('format_date', function() {
+			var d = new Date(this.timestamp);	
+			return new Handlebars.SafeString(d.toLocaleString());
+		});
+		$(document).ready(function(){
+			$.get("/data/config/train", function (data) {
+				var source   = $("#train-map").html();
+				var template = Handlebars.compile(source);
+			
+				$("#train-list-placeholder").html(template(data));
+			});
+			$.get("/data/system", function (data) {
+				var source   = $("#data-table").html();
+				var template = Handlebars.compile(source);
+			
+				$("#log-table-placeholder").html(template(data));
+			});
+		});
+	</script>
+</body>
+</html>
