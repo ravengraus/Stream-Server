@@ -18,20 +18,28 @@
 		<div id="log-table-placeholder"></div>
 	</div>
 	<script id="train-map" type="text/x-handlebars-template">
+		<!-- Nav tabs -->
+		<ul id="train-tab-menu" class="nav nav-tabs" role="tablist">
+		  {{#each trains}}
+		  <li><a href="#{{id}}" role="tab" data-toggle="tab">{{id}}</a></li>
+		  {{/each}}
+		</ul>		
+		<!-- Tab panes -->
+		<div class="tab-content">
 		{{#each trains}}
-			<h4>{{id}}</h4>
-			{{#if cameras}}
-			<div>
+			<div class="tab-pane" id="{{id}}">
+				{{#if cameras}}
 				<ul class="nav nav-pills">
 					{{#each cameras}}
-					<li><a href="#">{{name}}</a></li>
+					<li><a href="#">Camera: {{name}}</a></li>
 					{{/each}}
 				</ul>
-			</div>
-			{{else}}
-			<p>No cameras configured.</p>
-			{{/if}}
+				{{else}}
+				<p>No cameras configured.</p>
+				{{/if}}
+			</div>	
 		{{/each}}
+		</div>
 	</script>
 	<script id="data-table" type="text/x-handlebars-template">
 		<table class="table table-striped">
@@ -73,11 +81,13 @@
 			
 				$("#train-list-placeholder").html(template(data));
 			});
-			$.get("/data/system", function (data) {
+			$.get("/data/camera/1", function (data) {
 				var source   = $("#data-table").html();
 				var template = Handlebars.compile(source);
 			
 				$("#log-table-placeholder").html(template(data));
+				
+				$('#train-tab-menu a:first').tab('show')
 			});
 		});
 	</script>
