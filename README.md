@@ -12,11 +12,11 @@ TODO:
 
 Dependencies
 ------------
-Install the dependencies using 
+Install required dependencies using 
 ```
 npm install
 ```
-in the project directory.
+from the project directory.
 
 How to run
 ----------
