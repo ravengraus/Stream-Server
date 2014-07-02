@@ -3,8 +3,8 @@
 <head>
 	<meta charset="utf-8">
 	<title>System Status</title>
-	<link rel="stylesheet" href="css/bootstrap.min.css" />
-	<link rel="stylesheet" href="css/bootstrap-theme.min.css" />
+	<link rel="stylesheet" href="/admin/css/bootstrap.min.css" />
+	<link rel="stylesheet" href="/admin/css/bootstrap-theme.min.css" />
 	<style>
 		.tab-content { padding-top: 15px; }
 		p.empty { line-height: 40px; padding-left: 15px; }
@@ -73,9 +73,9 @@
 			</tbody>
 		</table>
 	</script>
-	<script type="text/javascript" src="js/handlebars-v1.3.0.js"></script>
-	<script type="text/javascript" src="js/jquery-1.11.1.min.js"></script>
-	<script type="text/javascript" src="js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="/admin/js/handlebars-v1.3.0.js"></script>
+	<script type="text/javascript" src="/admin/js/jquery-1.11.1.min.js"></script>
+	<script type="text/javascript" src="/admin/js/bootstrap.min.js"></script>
 	<script>
 		Handlebars.registerHelper('title_case', function() {
 			var s = this.level.substring(0, 1).toUpperCase();
@@ -87,7 +87,7 @@
 			return new Handlebars.SafeString(d.toLocaleString());
 		});
 		function loadtable(url) {
-			$('#log-table-placeholder').html('<img src="loading.gif" class="loading" alt="loading" />');
+			$('#log-table-placeholder').html('<img src="/admin/loading.gif" class="loading" alt="loading" />');
 			
 			$.get(url, function (data) {
 				var source   = $('#data-table').html();
