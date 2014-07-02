@@ -4,10 +4,10 @@ Stream-Server
 A server for async streaming camera actions.
 
 TODO:
-~~* Camera entities with status events~~
-~~* Start-up initialize sequence per server and per camera~~
-~~* Retry mechanism for failed API-events~~
-~~* Controller route for camera status page~~
+*~~Camera entities with status events~~
+*~~Start-up initialize sequence per server and per camera~~
+*~~Retry mechanism for failed API-events~~
+*~~Controller route for camera status page~~
 *Trim/compact logs on server startup or interval
 
 Dependencies
