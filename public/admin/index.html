@@ -5,6 +5,11 @@
 	<title>System Status</title>
 	<link rel="stylesheet" href="css/bootstrap.min.css" />
 	<link rel="stylesheet" href="css/bootstrap-theme.min.css" />
+	<style>
+		.tab-content { padding-top: 15px; }
+		p.empty { line-height: 40px; padding-left: 15px; }
+		img.loading { text-align: center; }
+	</style>
 </head>
 <body>
 	<div class="header">
@@ -20,28 +25,35 @@
 	<script id="train-map" type="text/x-handlebars-template">
 		<!-- Nav tabs -->
 		<ul id="train-tab-menu" class="nav nav-tabs" role="tablist">
+		  <li><a href="#system" role="tab" data-toggle="tab">System</a></li>
 		  {{#each trains}}
 		  <li><a href="#{{id}}" role="tab" data-toggle="tab">{{id}}</a></li>
 		  {{/each}}
 		</ul>		
 		<!-- Tab panes -->
 		<div class="tab-content">
+			<div class="tab-pane" id="system">
+				<ul class="nav nav-pills">
+					<li class="active"><a data-uri="/data/system" href="#">Server messages</a></li>
+				</ul>
+			</div>
 		{{#each trains}}
 			<div class="tab-pane" id="{{id}}">
 				{{#if cameras}}
 				<ul class="nav nav-pills">
 					{{#each cameras}}
-					<li><a href="#">Camera: {{name}}</a></li>
+					<li><a data-uri="/data/camera/{{name}}" href="#">Camera {{name}}</a></li>
 					{{/each}}
 				</ul>
 				{{else}}
-				<p>No cameras configured.</p>
+				<p class="empty">No cameras configured.</p>
 				{{/if}}
 			</div>	
 		{{/each}}
 		</div>
 	</script>
 	<script id="data-table" type="text/x-handlebars-template">
+		<!--Log message table-->
 		<table class="table table-striped">
 			<thead>
 				<tr>
@@ -74,20 +86,32 @@
 			var d = new Date(this.timestamp);	
 			return new Handlebars.SafeString(d.toLocaleString());
 		});
-		$(document).ready(function(){
-			$.get("/data/config/train", function (data) {
-				var source   = $("#train-map").html();
+		function loadtable(url) {
+			$('#log-table-placeholder').html('<img src="loading.gif" class="loading" alt="loading" />');
+			
+			$.get(url, function (data) {
+				var source   = $('#data-table').html();
 				var template = Handlebars.compile(source);
 			
-				$("#train-list-placeholder").html(template(data));
+				$('#log-table-placeholder').html(template(data));
 			});
-			$.get("/data/camera/1", function (data) {
-				var source   = $("#data-table").html();
+		}
+		$(document).ready(function(){
+			$.get('/data/config/train', function (data) {
+				var source   = $('#train-map').html();
 				var template = Handlebars.compile(source);
 			
-				$("#log-table-placeholder").html(template(data));
+				$('#train-list-placeholder').html(template(data));
+				$('#train-tab-menu a:first').tab('show');
 				
-				$('#train-tab-menu a:first').tab('show')
+				$('ul.nav-pills li a').click(function() {   
+					$('ul.nav-pills li').removeClass('active');
+					$(this).parent().addClass('active');
+					
+					loadtable($(this).attr('data-uri'));
+				});
+				
+				$('#system a:first').click();
 			});
 		});
 	</script>

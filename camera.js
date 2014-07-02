@@ -64,7 +64,7 @@ Camera.prototype.log = function (level, message, callback) {
 Camera.prototype.data = function (callback) {
 	var camera = this;
 
-	camera.db.find({}).sort({ timestamp: -1 }).limit(100).exec(function (err, dataset) {
+	camera.db.find({}).sort({ timestamp: -1 }).limit(300).exec(function (err, dataset) {
 	  if (err) {
 		  camera.log('error', 'Error retrieving log messages from database for camera.');
 		  if (callback) callback(true);

@@ -80,7 +80,7 @@ server.get('/data/config/train', function (req, res, next) {
 
 // route for system data
 server.get('/data/system', function (req, res, next) {
-	system.find({}).sort({ timestamp: -1 }).limit(100).exec(function (err, dataset) {
+	system.find({}).sort({ timestamp: -1 }).limit(300).exec(function (err, dataset) {
 	  if (err) {
 		  system.log('error', 'Error retrieving system messages from database.');
 		  res.send('Error.');
