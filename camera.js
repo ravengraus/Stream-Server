@@ -12,6 +12,15 @@ function apiUrl (ip, action, id) {
 	else return url;
 }
 
+function checkPath(path, cb) {
+	fs.mkdir(path, 0777, function(err) {
+		if (err) {
+			if (err.code == 'EEXIST') cb(null); // ignore the error if the folder already exists
+			else cb(err); // something else went wrong
+		} else cb(null); // successfully created folder
+	});
+}
+
 // public constructor
 function Camera (name, ipAddress) {
 	this.name = name;
@@ -29,6 +38,7 @@ function Camera (name, ipAddress) {
 			return true;
 		}
 		else {
+			this.counter[c] == null;
 			return false;
 		}
 	};
@@ -102,37 +112,48 @@ Camera.prototype.getFile = function (files, index, callback) {
 	
 	var filename = files[index].name[0];
 	var url = apiUrl(camera.ip, 'file', filename);
-	var path = __dirname + "/downloads/" + camera.name + "/" + filename;
-	var file = fs.createWriteStream(path);
+	var path = __dirname + "/downloads/" + camera.name;
 	
-	camera.log('info', 'Fetching ' + url + ' from camera.');
-    
-    function downloadFile() {
-	    http.get(url, function (response) {
-		    response.pipe(file);
-			
-			file.on('finish', function() {
-			  file.close(function () {
-				  camera.log('info', 'Successfully downloaded file: ' + filename + ' from camera.');
-				  
-				  if (callback) callback(camera, files, index);
-				  camera.reset('getFile');
-
-			  });
-			})
-			.on('error', function () {
-				if (camera.canRetry('getFile')) setTimeout(downloadFile, 1000);
-				else camera.log('error', 'Error saving file ' + filename + ' to disk.');
-			});
-			
-		})
-	    .on('error', function() {
-		    if (camera.canRetry('getFile')) setTimeout(downloadFile, 1000);
-		    else camera.log('error', 'Could not download file: ' + filename + ' from camera.');
-	    });
-	}
-	
-	downloadFile();
+	checkPath(path, function (error) {
+		if (error) {
+			// failed to create path to store captured videos	
+			camera.log('error', 'Failed to create directory to save camera downloads.');
+		}
+		else {
+			var file = fs.createWriteStream(path + "/" + filename);
+		
+			camera.log('info', 'Fetching ' + url + ' from camera.');
+		
+			function downloadFile() {
+				http.get(url, function (response) {
+					response.pipe(file);
+		
+					file.on('finish', function() {
+					  file.close(function () {
+						  camera.log('info', 'Successfully downloaded file: ' + filename + ' from camera.');
+		
+						  if (callback) callback(camera, files, index);
+						  camera.reset('getFile');
+		
+					  });
+					})
+					.on('error', function () {
+						console.log('err');
+						if (camera.canRetry('getFile')) setTimeout(downloadFile, 1000);
+						else camera.log('error', 'Error saving file ' + filename + ' to disk.');
+					});
+		
+				})
+				.on('error', function() {
+					console.log('err');
+					if (camera.canRetry('getFile')) setTimeout(downloadFile, 1000);
+					else camera.log('error', 'Could not download file: ' + filename + ' from camera.');
+				});
+			}
+		
+			downloadFile();			
+		}
+	});
 };
 
 // delete file from device

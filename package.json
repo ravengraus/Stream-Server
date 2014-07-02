@@ -7,9 +7,8 @@
   "main": "server.js",
   "dependencies": {
     "nedb": "^0.10.5",
-    "restify": "*",
-    "restler": "*",
-    "winston": "*",
-    "xml2js": "*"
+    "restify": "2.8.1",
+    "restler": "3.2.2",
+    "xml2js": "0.4.4"
   }
 }

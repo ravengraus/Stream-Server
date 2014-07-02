@@ -2,7 +2,8 @@
 var restify = require('restify'),
 	config = require('./config'),
 	camera = require('./camera'),
-	Datastore = require('nedb');
+	Datastore = require('nedb'),
+	fs = require('fs');
 	
 // set up rest-api server
 var server = restify.createServer();
@@ -29,6 +30,13 @@ var trains = config.trains,
     trainsJson = JSON.stringify(trains);
 
 function startup() {
+	// ensure download directory for cameras exist
+	fs.mkdir(__dirname + '/downloads', 0777, function(err) {
+		if (err && err.code != 'EEXIST') {
+			system.log('error', 'Directory for saving camera downloads does not exist.');
+		}
+	});
+	// load cameras
 	for (var i = 0; i < trains.length; i++) {
 		var cameras = trains[i].cameras;
 
