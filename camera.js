@@ -30,20 +30,20 @@ function Camera (name, ipAddress) {
 	var dataPath = __dirname + "/data/" + name + ".db";
 	this.db = new Datastore({ filename: dataPath, autoload: true });
 	
-	this.canRetry = function (c) {
-		(this.counter[c] != null) ? this.counter[c] = this.counter[c] + 1 : this.counter[c] = 0;
+	this.canRetry = function (c) {		
+		(this.counter[c] == null) ? this.counter[c] = 0 : this.counter[c] = this.counter[c] + 1;
 		
 		if (this.counter[c] < config.maxRetry) {
 			this.log('info', 'Retrying ' + c + '. Attempt ' + (this.counter[c] + 1) + ' of '  + config.maxRetry);
 			return true;
 		}
 		else {
-			this.counter[c] == null;
+			this.counter[c] = null;
 			return false;
 		}
 	};
 	this.reset = function (c) {
-		if (this.counter[c] != null) this.counter[c] == null;
+		this.counter[c] = null;
 	};
 	this.log = function (level, message, callback) {
 		var entry = {
@@ -113,6 +113,7 @@ Camera.prototype.getFile = function (files, index, callback) {
 	var filename = files[index].name[0];
 	var url = apiUrl(camera.ip, 'file', filename);
 	var path = __dirname + "/downloads/" + camera.name;
+	var timestamp = new Date().getTime();
 	
 	checkPath(path, function (error) {
 		if (error) {
@@ -120,7 +121,7 @@ Camera.prototype.getFile = function (files, index, callback) {
 			camera.log('error', 'Failed to create directory to save camera downloads.');
 		}
 		else {
-			var file = fs.createWriteStream(path + "/" + filename);
+			var file = fs.createWriteStream(path + "/" + timestamp + "_" + filename);
 		
 			camera.log('info', 'Fetching ' + url + ' from camera.');
 		
@@ -184,7 +185,7 @@ Camera.prototype.deleteFile = function (filename, callback) {
 			}
 		  }
 		  else {
-			if (config.develop) camera.log('debug', 'Delete OK [Filename, ' + filename + ']. Response: ' + res);
+			if (config.debug) camera.log('debug', 'Delete OK [Filename, ' + filename + ']. Response: ' + res);
 			if (callback) callback();
 			
 			camera.reset('deleteFile');
