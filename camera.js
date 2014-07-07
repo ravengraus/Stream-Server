@@ -165,13 +165,23 @@ Camera.prototype.deleteFile = function (filename, callback) {
 	
 	rest.get(url, { timeout: config.timeout })
 		.on('timeout', function () {
-			if (camera.canRetry('deleteFile')) this.retry(1000);
-			else camera.log('error', 'Request to delete file: ' + filename + ' from camera took too long.');
+			if (camera.canRetry('deleteFile')) {
+				this.retry(1000);
+			}
+			else {
+				camera.log('error', 'Request to delete file: ' + filename + ' from camera took too long.');
+				if (callback) callback();	
+			}
 		})
 		.on('complete', function(res) {
 		  if (res instanceof Error) {
-			if (camera.canRetry('deleteFile')) this.retry(1000);
-			else camera.log('error', 'Could not delete file: ' + filename + ' from camera.');
+			if (camera.canRetry('deleteFile')) {
+				this.retry(1000);
+			}
+			else {
+				camera.log('error', 'Could not delete file: ' + filename + ' from camera.');
+				if (callback) callback();	
+			}
 		  }
 		  else {
 			if (config.develop) camera.log('debug', 'Delete OK [Filename, ' + filename + ']. Response: ' + res);

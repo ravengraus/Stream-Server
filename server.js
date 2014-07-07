@@ -53,28 +53,53 @@ function startup() {
 function initialize(camera) {
 	// TODO: trim camera log
 	
-	camera.status(function () {
+	camera.status(function (s, c) {
 		camera.log('info', 'Camera online.');
-		system.log('info', 'Camera ' + camera.name + ' is online.');
+		system.log('info', 'Camera ' + c.name + ' is online.');
 	});
 }
 
-// controller routes for train actions
+// route for train actions
 server.get('/train/:action/:id', function(req, res, next) {
-	if (req.params.action == 'in') {
-		system.log('info', 'Incoming train: ' + req.params.id);
-		trainComingIn(req.params.id);
-		res.send('Acknowledged. Train ' + req.params.id +  ' coming in.');
-	}	
-	else if (req.params.action == 'out') {
-		system.log('info', 'Outgoing train: ' + req.params.id);
-		trainGoingOut(req.params.id);
-		res.send('Acknowledged. Train ' + req.params.id +  ' going out.');
+	var id = req.params.id,
+		action = req.params.action,
+		train = null;
+	
+	for (var i = 0; i < trains.length; i++) {
+		if (trains[i].id == id) train = trains[i];
+	}
+	
+	if (train == null) {
+		system.log('info', 'Unknown train or train with no cameras. [id=' + id + ']');
+		res.send('Unsupported request.');
+		next();
 	}
 	else {
-		res.send('Unsupported request.');
+		var callback, 
+		    cameras = train.cameras;
+
+		if (action == 'in') {
+			callback = incomingStatus;
+			
+			system.log('info', 'Incoming train: ' + id);
+			res.send('Acknowledged. Train ' + id +  ' coming in.');
+		}	
+		else if (action == 'out') {
+			callback = outgoingStatus;
+			
+			system.log('info', 'Outgoing train: ' + id);
+			res.send('Acknowledged. Train ' + id +  ' going out.');
+		}
+		else {
+			res.send('Unsupported request.');
+		}
+		
+		for (var j = 0; j < cameras.length; j++) {
+			// get status of camera
+			cameras[j].camera.status(callback);
+		}
+		next();
 	}
-	next();
 });
 
 // route for train configuration
@@ -102,45 +127,46 @@ server.get('/data/system', function (req, res, next) {
 
 // route for camera data
 server.get('/data/camera/:name', function (req, res, next) {	
+	var camera;
+	
 	if (req.params.name) {
-		var notFound = true;
-		
-		// search trains for camera
+		// find camera
 		for (var i = 0; i < trains.length; i++) {
 			var cameras = trains[i].cameras;
-		
+			
 			for (var j = 0; j < cameras.length; j++) {
-				// camera matching name found
 				if (cameras[j].camera.name == req.params.name) {
-					notFound = false;
-					
-					// call camera for log dump
-					cameras[j].camera.data(function (err, dataset) {
-						if (err) {
-							system.log('error', 'Failed to get event log for camera ' + camera.name + '.');
-							res.send('Error.');
-						}
-						else {
-							res.send(dataset);
-						}
-						next();
-					});
+					camera = cameras[j].camera;
 					break;
 				}
 			}
+			if (camera) break;
 		}
-		
-		if (notFound) {
-			res.send('Camera not found.');
+		if (camera) {
+			// get log data
+			camera.data(function (err, dataset) {
+				if (err) {
+					system.log('error', 'Failed to get event log for camera ' + camera.name + '.');
+					res.send('Error.');
+				}
+				else {
+					res.send(dataset);
+				}
+				next();
+			});
+		}
+		else {
+			res.send('Error. Camera not found.');
 			next();
 		}
 	}
 	else {
-		res.send('Error.');
+		res.send('Error. Unsupported request.');
 		next();
 	}
 });
 
+// route to serve static content (e.g. admin console)
 server.get(/\/admin\/?.*/, restify.serveStatic({
   directory: './public',
   default: 'index.html'
@@ -183,74 +209,35 @@ function processFiles(camera, files, index) {
 	}
 }
 
-function trainComingIn(id) {
-	var train = getTrain(id);
+function incomingStatus (s, c) {
+	system.log('info', 'Camera ' + c.name + ' recording status: ' + s.status);
 	
-	if (train) {
-		var cameras = train.cameras;
-		
-		for (var i = 0; i < cameras.length; i++) {
-			var camera = cameras[i].camera;
-			
-			// get status of camera
-			camera.status(function (s) {
-				system.log('info', 'Camera ' + camera.name + ' recording status: ' + s.status);
-				
-				if (s.status != 'stopped') {
-					// tell camera to stop recording
-					camera.stopRecord(function () {
-						// camera stopped, re-check status
-						trainComingIn(id);
-					});
-				}
-				else {
-					processFiles(camera, s.files[0].file);
-				}
-			});
-		}
+	if (s.status != 'stopped') {
+		// tell camera to stop recording
+		c.stopRecord(function () {
+			// camera stopped, re-check status
+			c.status(incomingStatus);
+		});
 	}
 	else {
-		system.log('info', 'Unknown train or train with no cameras. [id=' + id + ']');
-	}
+		processFiles(c, s.files[0].file);
+	}			
 }
 
-function trainGoingOut (id) {
-	var train = getTrain(id);
+function outgoingStatus (s, c) {
+	system.log('info', 'Camera ' + c.name + ' recording status: ' + s.status);
 	
-	if (train) {
-		var cameras = train.cameras;
-		
-		for (var i = 0; i < cameras.length; i++) {
-			var camera = cameras[i].camera;
-			
-			// get status of camera
-			camera.status(function (s) {
-				system.log('info', 'Camera ' + camera.name + ' recording status: ' + s.status);
-				
-				if (s.status != 'running') {
-					// tell camera to start recording
-					camera.startRecord(function () {
-						// all done
-						system.log('info', 'Successfully started recording for camera ' + camera.name + ' on train ' + id);
-					});
-				}
-				else {
-					// unexpected state, camera is recording before going out...was not stopped coming in
-					system.log('info', 'Camera ' + camera.name + ' on train ' + id + ' should not be recording');
-				}
-			});
-		}
+	if (s.status != 'running') {
+		// tell camera to start recording
+		c.startRecord(function () {
+			// all done
+			system.log('info', 'Successfully started recording for camera ' + c.name + ' on train ' + id);
+		});
 	}
 	else {
-		system.log('info', 'Unknown train or train with no cameras. [id=' + id + ']');
+		// unexpected state, camera is recording before going out...was not stopped coming in
+		system.log('info', 'Camera ' + c.name + ' on train ' + id + ' should not be recording');
 	}
-}
-
-function getTrain(id) {
-	for (var i = 0; i < trains.length; i++) {
-		if (trains[i].id == id) return trains[i];
-	}
-	return null;
 }
 
 process.on('uncaughtException', function (err) {
