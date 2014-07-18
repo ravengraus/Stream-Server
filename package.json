@@ -6,6 +6,7 @@
   "author": "Richard <r.avengraus@gmail.com>",
   "main": "server.js",
   "dependencies": {
+    "ncp": "^0.6.0",
     "nedb": "^0.10.5",
     "restify": "2.8.1",
     "restler": "3.2.2",

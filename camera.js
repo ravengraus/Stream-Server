@@ -1,9 +1,13 @@
 var rest = require('restler'),
 	http = require('http'),
 	fs = require('fs'),
+	ncp = require('ncp').ncp,
 	config = require('./config'),
 	Datastore = require('nedb');
-	
+
+// configure limit for max file copies
+ncp.limit = 16;
+
 // api url builder
 function apiUrl (ip, action, id) {	
 	var url = "http://" + ip + config.endpoints[action];
@@ -114,15 +118,21 @@ Camera.prototype.getFile = function (files, index, callback) {
 	var url = apiUrl(camera.ip, 'file', filename);
 	var path = __dirname + "/downloads/" + camera.name;
 	var timestamp = new Date().getTime();
+	var dest = path + "/";
 	
 	checkPath(path, function (error) {
 		if (error) {
 			// failed to create path to store captured videos	
 			camera.log('error', 'Failed to create directory to save camera downloads.');
 		}
-		else {
-			var file = fs.createWriteStream(path + "/" + timestamp + "_" + filename);
-		
+		else {			
+			if (config.saveFromCameraAs)
+				dest = dest + config.saveFromCameraAs;	
+			else
+				dest = dest + timestamp + "_" + filename;
+			
+			var file = fs.createWriteStream(dest);
+
 			camera.log('info', 'Fetching ' + url + ' from camera.');
 		
 			function downloadFile() {
@@ -139,20 +149,32 @@ Camera.prototype.getFile = function (files, index, callback) {
 					  });
 					})
 					.on('error', function () {
-						console.log('err');
 						if (camera.canRetry('getFile')) setTimeout(downloadFile, 1000);
 						else camera.log('error', 'Error saving file ' + filename + ' to disk.');
 					});
 		
 				})
 				.on('error', function() {
-					console.log('err');
 					if (camera.canRetry('getFile')) setTimeout(downloadFile, 1000);
 					else camera.log('error', 'Could not download file: ' + filename + ' from camera.');
 				});
 			}
-		
 			downloadFile();			
+		}
+	});
+};
+
+Camera.prototype.copyPimmsFolder = function (callback) {
+	var source = __dirname + "/pimms_copy/",
+		destination = __dirname + "/downloads/" + camera.name;
+		
+	ncp(source, destination, { clobber: false }, function (err) {
+		if (err) {
+			camera.log('error', 'Failed to copy template files from folder: pimms_copy in the application directory.');
+			camera.log('error', err.toString());
+		}
+		else {
+			if (callback) callback();
 		}
 	});
 };

@@ -2,6 +2,7 @@
 var restify = require('restify'),
 	config = require('./config'),
 	camera = require('./camera'),
+	pimms = require('./pimms'),
 	Datastore = require('nedb'),
 	fs = require('fs');
 	
@@ -63,9 +64,9 @@ function initialize(camera) {
 server.get('/train/:action/:id', function(req, res, next) {
 	var id = req.params.id,
 		action = req.params.action,
-		train = null;
+		train = null, i;
 	
-	for (var i = 0; i < trains.length; i++) {
+	for (i = 0; i < trains.length; i++) {
 		if (trains[i].id == id) train = trains[i];
 	}
 	
@@ -88,6 +89,10 @@ server.get('/train/:action/:id', function(req, res, next) {
 			callback = outgoingStatus;
 			
 			system.log('info', 'Outgoing train: ' + id);
+
+			pimms.trigger();
+			pimms.startTrain(i);
+
 			res.send('Acknowledged. Train ' + id +  ' going out.');
 		}
 		else {
@@ -201,6 +206,7 @@ function processFiles(camera, files, index) {
 		}
 		else {
 			system.log('info', 'Finished. All files processed for camera ' + camera.name);
+			camera.copyPimmsFolder();
 		}
 	}
 	else {
