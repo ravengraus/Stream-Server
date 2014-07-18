@@ -145,14 +145,12 @@ Camera.prototype.getFile = function (files, index, callback) {
 					  });
 					})
 					.on('error', function () {
-						console.log('err');
 						if (camera.canRetry('getFile')) setTimeout(downloadFile, 1000);
 						else camera.log('error', 'Error saving file ' + filename + ' to disk.');
 					});
 		
 				})
 				.on('error', function() {
-					console.log('err');
 					if (camera.canRetry('getFile')) setTimeout(downloadFile, 1000);
 					else camera.log('error', 'Could not download file: ' + filename + ' from camera.');
 				});
