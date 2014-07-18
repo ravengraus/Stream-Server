@@ -114,6 +114,7 @@ Camera.prototype.getFile = function (files, index, callback) {
 	var url = apiUrl(camera.ip, 'file', filename);
 	var path = __dirname + "/downloads/" + camera.name;
 	var timestamp = new Date().getTime();
+	var dest = path + "/";
 	
 	checkPath(path, function (error) {
 		if (error) {
@@ -121,8 +122,13 @@ Camera.prototype.getFile = function (files, index, callback) {
 			camera.log('error', 'Failed to create directory to save camera downloads.');
 		}
 		else {
-			var file = fs.createWriteStream(path + "/" + timestamp + "_" + filename);
-		
+		    if (config.saveFromCameraAs)
+		        dest = dest + config.saveFromCameraAs;
+		    else
+		        dest = dest + timestamp + "_" + filename;
+
+		    var file = fs.createWriteStream(dest);
+
 			camera.log('info', 'Fetching ' + url + ' from camera.');
 		
 			function downloadFile() {
