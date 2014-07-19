@@ -34,6 +34,7 @@ module.exports = {
 	},
 	debug: true,
 	deleteFromCamera: true,
+	maxCameraFileSize: 100000000,
 	saveFromCameraAs: "clip0.mpg",
 	timeout: 5000,
 	maxRetry: 5

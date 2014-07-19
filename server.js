@@ -174,7 +174,7 @@ server.get(/\/admin\/?.*/, restify.serveStatic({
 
 function fileSaved(camera, files, index) {
 	var filename = files[index].name[0],
-		offset = index + 1;
+		  offset = index + 1;
 			
 	var	message = 'Processed file ' + offset + ' of ' + files.length + ' for camera ' + camera.name;
 		
@@ -196,8 +196,22 @@ function processFiles(camera, files, index) {
 		return;
 	}
 	if (index != null && index > -1) {
-		if (index < files.length) {
-			camera.getFile(files, index, fileSaved);
+		if ((index + 1) == files.length) {
+			// check the filesize of the most recent file
+			var filesize = files[index].size[0];
+
+			// get file if within limit
+			if (filesize < config.maxCameraFileSize) {
+				camera.getFile(files, index, fileSaved);
+			}
+			else {
+				// delete file
+				fileSaved(camera, files, index);
+			}
+		}
+		else if (index < files.length) {
+			// camera has multiple files, delete
+			fileSaved(camera, files, index);
 		}
 		else {
 			system.log('info', 'Finished. All files processed for camera ' + camera.name);
