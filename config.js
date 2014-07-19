@@ -30,12 +30,15 @@ module.exports = {
 		status: "/api/record",
 		start: "/api/record/start",
 		stop: "/api/record/stop",
-		file: "/api/record/file/"
+		file: "/api/record/file/",
+		powerOn: "/api/power/start",
+		powerOff: "/api/power/stop"
 	},
 	debug: true,
 	deleteFromCamera: true,
 	maxCameraFileSize: 100000000,
+	maxRetry: 5,
+	powerOffCronRule: "0 22 * * *",
 	saveFromCameraAs: "clip0.mpg",
-	timeout: 5000,
-	maxRetry: 5
+	timeout: 5000
 };

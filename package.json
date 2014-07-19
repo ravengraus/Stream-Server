@@ -7,6 +7,7 @@
   "main": "server.js",
   "dependencies": {
     "nedb": "^0.10.5",
+    "node-schedule": "^0.1.13",
     "restify": "2.8.1",
     "restler": "3.2.2",
     "xml2js": "0.4.4"

@@ -3,6 +3,7 @@ var restify = require('restify'),
 	config = require('./config'),
 	camera = require('./camera'),
 	Datastore = require('nedb'),
+	schedule = require('node-schedule'),
 	fs = require('fs');
 	
 // set up rest-api server
@@ -24,6 +25,15 @@ system.log = function (level, message, print) {
 		if (err) console.log('Error: Unable to log system messages.', err);
 	});
 };
+
+// set up scheduled power off
+var job;
+
+if (config.powerOffCronRule) {
+	job = schedule.scheduleJob(config.powerOffCronRule, function() {
+    	powerCycle('powerOff');
+	});
+}
 
 // load trains from config
 var trains = config.trains,
@@ -58,6 +68,32 @@ function initialize(camera) {
 		system.log('info', 'Camera ' + c.name + ' is online.');
 	});
 }
+
+function powerCycle(mode) {
+	for (var i = 0; i < trains.length; i++) {
+		var cameras = trains[i].cameras;
+
+		for (var j = 0; j < cameras.length; j++) {
+			cameras[j].camera.power(mode);
+		}
+	}
+	system.log('info', 'Command ' + mode + ' sent to all cameras on all trains. Check camera log for power status.');	
+}
+
+// route for power cycling cameras
+server.get('/system/power/:mode', function(req, res, next) {
+	var mode = req.params.mode;
+
+	if (mode == 'powerOn' || mode == 'powerOff') {
+		powerCycle(mode);
+		res.send('Command sent.');
+		next();
+	}
+	else {
+		res.send('Unsupported request.');
+		next();
+	}
+});
 
 // route for train actions
 server.get('/train/:action/:id', function(req, res, next) {

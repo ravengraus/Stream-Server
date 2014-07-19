@@ -106,6 +106,29 @@ Camera.prototype.status = function (callback) {
         });
 };
 
+// power cycle camera on/off
+Camera.prototype.power = function (mode, callback) { 
+    var camera = this;
+    
+    rest.get(apiUrl(camera.ip, mode), { timeout: config.timeout })
+        .on('timeout', function () {
+            if (camera.canRetry(mode)) this.retry(1000);
+            else camera.log('error', 'Request to set camera power mode to: ' + mode + ' took too long.');
+        })
+        .on('complete', function(res) {
+          if (res instanceof Error) {
+            if (camera.canRetry(mode)) this.retry(1000);
+            else camera.log('error', 'Failed to set camera power mode to: ' + mode);
+          }
+          else {
+            camera.log('info', 'Camera power mode now set to: ' + mode);
+            camera.reset(mode);
+            
+            if (callback) callback();
+          }
+        });
+};
+
 // get file from device
 Camera.prototype.getFile = function (files, index, callback) {
     var camera = this;

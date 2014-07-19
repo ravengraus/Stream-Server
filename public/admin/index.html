@@ -9,6 +9,7 @@
 		.tab-content { padding-top: 15px; }
 		p.empty { line-height: 40px; padding-left: 15px; }
 		img.loading { text-align: center; }
+		.pwr { line-height: 1.9; }
 	</style>
 </head>
 <body>
@@ -35,6 +36,10 @@
 			<div class="tab-pane" id="system">
 				<ul class="nav nav-pills">
 					<li class="active"><a data-uri="/data/system" href="#">Server messages</a></li>
+					<li style="padding-left: 15px;">
+						<button type="button" class="btn btn-danger pwr" onclick="powerCycle('powerOff')">Power off</button>
+						<button type="button" class="btn btn-success pwr" onclick="powerCycle('powerOn')">Power on</button>
+					</li>
 				</ul>
 			</div>
 		{{#each trains}}
@@ -86,6 +91,12 @@
 			var d = new Date(this.timestamp);	
 			return new Handlebars.SafeString(d.toLocaleString());
 		});
+		function powerCycle(mode) {
+			$.get('/system/power/' + mode, function (data) {
+				console.log('hello');
+				$('#system a:first').click();
+			});
+		}
 		function loadtable(url) {
 			$('#log-table-placeholder').html('<img src="/admin/loading.gif" class="loading" alt="loading" />');
 			
