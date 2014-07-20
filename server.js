@@ -96,6 +96,23 @@ server.get('/system/power/:mode', function(req, res, next) {
     }
 });
 
+// route for polling cameras
+server.get('/system/poll', function (req, res, next) {
+    system.log('info', 'Polling all cameras... Refresh server messages for camera status.'); 
+
+    // poll cameras
+    for (var i = 0; i < trains.length; i++) {
+        var cameras = trains[i].cameras;
+
+        for (var j = 0; j < cameras.length; j++) {
+            // get status
+            initialize(cameras[j].camera);
+        }
+    }
+    res.send('Completed.');
+    next();
+});
+
 // route for broadcasting command to all cameras
 server.post('/system/command/send', function (req, res, next) {
     var api = req.params.command;
@@ -283,8 +300,6 @@ function processFiles(camera, files, index) {
 }
 
 function incomingStatus (s, c) {
-    system.log('info', 'Camera ' + c.name + ' recording status: ' + s.status);
-    
     if (s.status != 'stopped') {
         // tell camera to stop recording
         c.stopRecord(function () {
@@ -298,8 +313,6 @@ function incomingStatus (s, c) {
 }
 
 function outgoingStatus (s, c) {
-    system.log('info', 'Camera ' + c.name + ' recording status: ' + s.status);
-    
     if (s.status != 'running') {
         // tell camera to start recording
         c.startRecord(function () {

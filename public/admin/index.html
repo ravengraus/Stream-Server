@@ -9,7 +9,7 @@
 		.tab-content { padding-top: 15px; }
 		p.empty { line-height: 40px; padding-left: 15px; }
 		img.loading { text-align: center; }
-		.pwr { line-height: 1.9; }
+		.sys { line-height: 1.9; }
 		.cmd { display:inline-block;width: 300px; }
 	</style>
 </head>
@@ -38,15 +38,15 @@
 				<ul class="nav nav-pills">
 					<li class="active"><a data-uri="/data/system" href="#">Server messages</a></li>
 					<li style="padding-left: 15px;">
-						<button type="button" class="btn btn-danger pwr" onclick="powerCycle('powerOff')">Power off</button>
-						<button type="button" class="btn btn-success pwr" onclick="powerCycle('powerOn')">Power on</button>
+						<button type="button" class="btn btn-danger sys" onclick="powerCycle('powerOff')">Power off</button>
+						<button type="button" class="btn btn-success sys" onclick="powerCycle('powerOn')">Power on</button>
 					</li>
 					<li style="padding-left: 10px;">
-						<button type="button" class="btn btn-primary pwr" onclick="query">Poll</button>
+						<button type="button" class="btn btn-primary sys" onclick="query()">Poll</button>
 					</li>
 					<li style="float: right;">
 						<input id="apiCmd" type="text" class="form-control cmd" placeholder="/api/power/start">
-						<button type="button" class="btn btn-link pwr" onclick="sendCommand()">Send command</button>
+						<button type="button" class="btn btn-link sys" onclick="sendCommand()">Send command</button>
 					</li>
 				</ul>
 			</div>
@@ -99,6 +99,11 @@
 			var d = new Date(this.timestamp);	
 			return new Handlebars.SafeString(d.toLocaleString());
 		});
+		function query() {
+			$.get('/system/poll', function (data) {
+				$('#system a:first').click();
+			});
+		}
 		function powerCycle(mode) {
 			$.get('/system/power/' + mode, function (data) {
 				$('#system a:first').click();
