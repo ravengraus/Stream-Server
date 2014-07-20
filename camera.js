@@ -85,6 +85,18 @@ Camera.prototype.data = function (callback) {
     });
 };
 
+// trim and compact log database
+Camera.prototype.trimLog = function (callback) {
+    var camera = this;
+
+    camera.db.remove({ }, { multi: true }, function (err) {
+        if (err) camera.log('error', 'Error trimming log messages for camera.');
+        else camera.db.persistence.compactDatafile();
+
+        if (callback) callback();
+    });
+};
+
 // recording status
 Camera.prototype.status = function (callback) { 
     var camera = this;

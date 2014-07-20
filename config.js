@@ -40,5 +40,6 @@ module.exports = {
 	maxRetry: 5,
 	powerOffCronRule: "0 22 * * *",
 	saveFromCameraAs: "clip0.mpg",
-	timeout: 5000
+	timeout: 5000,
+	trimLogCronRule: "0 0 * * *"
 };

@@ -27,12 +27,34 @@ system.log = function (level, message, print) {
     });
 };
 
-// set up scheduled power off
-var job;
+system.trimLog = function (callback) {
+    system.remove({ }, { multi: true }, function (err) {
+        if (err) system.log('error', 'Error trimming system log messages.');
+        else system.persistence.compactDatafile();
+
+        if (callback) callback();
+    });  
+};
+
+// set up scheduled jobs
+var powerJob, logJob;
 
 if (config.powerOffCronRule) {
-    job = schedule.scheduleJob(config.powerOffCronRule, function() {
+    powerJob = schedule.scheduleJob(config.powerOffCronRule, function() {
         powerCycle('powerOff');
+    });
+}
+if (config.trimLogCronRule) {
+    logJob = schedule.scheduleJob(config.trimLogCronRule, function() {
+        system.trimLog();
+
+        for (var i = 0; i < trains.length; i++) {
+            var cameras = trains[i].cameras;
+
+            for (var j = 0; j < cameras.length; j++) {
+                cameras[j].camera.trimLog();
+            }
+        }
     });
 }
 
@@ -62,8 +84,6 @@ function startup() {
 }
 
 function initialize(camera) {
-    // TODO: trim camera log
-    
     camera.status(function (s, c) {
         camera.log('info', 'Camera online.');
         system.log('info', 'Camera ' + c.name + ' is online.');
