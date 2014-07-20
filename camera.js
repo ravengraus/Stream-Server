@@ -123,7 +123,32 @@ Camera.prototype.power = function (mode, callback) {
           else {
             camera.log('info', 'Camera power mode now set to: ' + mode);
             camera.reset(mode);
+
+            if (callback) callback();
+          }
+        });
+};
+
+// send api command directly to camera
+Camera.prototype.command = function (api, callback) { 
+    var camera = this,
+        url = "http://" + camera.ip + api;
+    
+    rest.get(url, { timeout: config.timeout })
+        .on('timeout', function () {
+            if (camera.canRetry(api)) this.retry(1000);
+            else camera.log('error', 'Command ' + api + ' took too long.');
+        })
+        .on('complete', function(res) {
+          if (res instanceof Error) {
+            if (camera.canRetry(api)) this.retry(1000);
+            else camera.log('error', 'Commmand ' + api + ' resulted in an error.');
+          }
+          else {
+            camera.log('info', 'Command ' + api + ' successfully sent.');
+            camera.reset(api);
             
+            if (config.debug) camera.log('debug', 'Command OK [API, ' + api + ']. Response: ' + res);
             if (callback) callback();
           }
         });

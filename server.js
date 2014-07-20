@@ -8,6 +8,7 @@ var restify = require('restify'),
     
 // set up rest-api server
 var server = restify.createServer();
+    server.use(restify.bodyParser());
 
 // set up logging
 var system = new Datastore({ filename: __dirname + '/data/system.db', autoload: true });
@@ -92,6 +93,28 @@ server.get('/system/power/:mode', function(req, res, next) {
     else {
         res.send('Unsupported request.');
         next();
+    }
+});
+
+// route for broadcasting command to all cameras
+server.post('/system/command/send', function (req, res, next) {
+    var api = req.params.command;
+    
+    if (api && api.substring(0, 5) == '/api/') {
+        for (var i = 0; i < trains.length; i++) {
+            var cameras = trains[i].cameras;
+
+            for (var j = 0; j < cameras.length; j++) {
+                cameras[j].camera.command(api);
+            }
+        }
+        system.log('info', 'Command ' + api + ' sent to all cameras on all trains. Check camera log for status.');          
+        res.send('Command sent.');
+        next();
+    }
+    else {
+        res.send('Unsupported request.');
+        next();        
     }
 });
 
